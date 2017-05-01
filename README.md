@@ -12,16 +12,26 @@
    crop_image= cropPatches(path, windowsize=(24,24,24), stride=4)
    ```
 
-5. Zero mean and unit variance`std_patch = standardization(patch)`
+5. Zero mean and unit variance`patch,mu,std = standardization(patch)`
 
-6. Mean fusion of the patches `volume = fusePatches(patches)`
+6. Any preprocessing statistics  **must only be computed on the training data**, and then applied to the validation / test data. Returned the normalized pathes of train and test data.
 
-7. Create virtualCT`predict_CT = virtualCT(pathMR, model, CT_std, CT_mu)`
+   `train, test= normalize_train_test(patch_train, patch_test)`
 
-8. A simple way to visualize the vCT, true CT and MR
+7. Mean fusion of the patches `volume = fusePatches(patches)`
+
+8. Create virtualCT`predict_CT = virtualCT(pathMR, model, CT_std, CT_mu)`
+
+9. A simple way to visualize the vCT, true CT and MR
 
    `compareResult(MR, vCT, CT, savefig_dir)`
 
-9. Calculate the Mean Absolute Error for several patients of one model
+10. Calculate the Mean Absolute Error for several patients of one model
 
    ` MeanMAEforPatients = MAEforPrediction(model, lstMR, lstCT, CT_std, CT_mu)`
+
+## model.py
+
+1. Base model, 9 (conv3d+BN+ReLU) layers, "he initialization"  `model_FCN9_base`
+2. `model_FCN9_xavier` change the initialization of base model to xavier
+3. `model_FCN9_BNafterReLU` change the order of BN and ReLU

@@ -14,7 +14,6 @@ from numpy.lib.stride_tricks import as_strided
 def getMRCTdir(path):
 	"""
 	Get the path list of MR and CT
-	Return croped patches and original image
 	:param path: path of the folder containing MR and CT dicom
 	:return: lstMR(list of path for MR), lstCT(list of path for CT)
 	"""
@@ -34,18 +33,16 @@ def getMRCTdir(path):
 def getModelHistorydir(path):
 	"""
 	Get the path list of trained model and history
-	Return croped patches and original image
-	:param path: path of the folder containing MR and CT dicom
-	:return: lstMR(list of path for MR), lstCT(list of path for CT)
+	:param path: path of the folder containing trained model and history
 	"""
 	lstModel =[]
 	lstHistory =[]
-	for dirName, subdirList, fileList in os.walk(Path):
+	for dirName, subdirList, fileList in os.walk(path):
 		for filename in fileList:
 			if "model" in filename.lower():
 				lstModel.append(os.path.join(dirName,filename))
 			if "history" in filename.lower():
-            lstHistory.append(os.path.join(dirName,filename))
+            	lstHistory.append(os.path.join(dirName,filename))
     return lstModel, lstHistory
 
 def dicom2array(path):
@@ -66,7 +63,6 @@ def cropPatches(path, windowsize=(24,24,24),stride = 4):
 	image_crop = image_crop.reshape(newshape)
 	return image_crop
 
-
 def standardization(patch):
 	"""
 	return the standardized data (zero mean and unit variance) and reshape to one channel
@@ -77,6 +73,19 @@ def standardization(patch):
 	patch = (patch-mu)/deviation
 	patch = patch.reshape((patch.shape+(1,))).astype('float32')
 	return patch, mu, deviation
+
+def normalize_train_test(patch_train, patch_test):
+	"""
+	return the normalized data, mean computed only over the training data and reshape to one channel
+	data=format = "channels_last"
+	"""
+	deviation_train = np.std(patch_train)
+	mu_train = np.mean(patch_train)
+	patch_test = (patch_test-mu_train)/deviation_train
+	patch_test = patch_test.reshape((patch_test.shape+(1,))).astype('float32')
+	patch_train = (patch_train-mu_train)/deviation_train
+	patch_train = patch_train.reshape((patch_train.shape+(1,))).astype('float32')
+	return patch_train, patch_test
 
 def fusePatches(patches, step = (4,4,4), out_shape = (40,128,128)):
 	"""
@@ -116,7 +125,7 @@ def virtualCT(pathMR,model,CT_std,CT_mu):
 	predict_CT = fuseCTPatches(predict_CT_patch)
 	return predict_CT
 	
-def compareResult(MR, vCT, CT, patientid, rows=3, cols=6, startwith=2, savefig_dir):
+def compareResult(MR, vCT, CT, patientid, savefig_dir, rows=3, cols=6, startwith=2):
 	norm_ct = mcolors.Normalize(vmax = np.amax(np.maximum(vCT, CT)), 
                                 vmin = np.amin(np.minimum(vCT, CT)))
 	norm_mr = mcolors.Normalize(vmax = np.amax(MR), vmin = np.amin(MR))
@@ -151,17 +160,4 @@ def MAEforPrediction(model, lstMR, lstCT, CT_std, CT_mu):
 		mae = np.mean(np.absolute((vCT.astype("float") - true_CT.astype("float"))))
 		MAE.append(mae)
 	return np.mean(MAE)
-
-# #save the patches
-# pickle_file = '../Data/Exp14_128/MRICT_patch_%d_%d.pickle' %(cropMR.shape[1], cropCT.shape[1])
-# try:
-#     f = open(pickle_file,'wb')
-#     save = {
-#         'MRI': cropMR,
-#         'CT': cropCT,
-#         'num_patients':len(lstMR),
-#     }
-#     pickle.dump(save, f, pickle.HIGHEST_PROTOCOL)
-#     f.close()
-# except Exception as e:
-#     print('Unable to save data to', pickle_file, ':', e)
+	
