@@ -20,15 +20,9 @@
 
 7. Mean fusion of the patches `volume = fusePatches(patches)`
 
-8. Create virtualCT`predict_CT = virtualCT(pathMR, model, CT_std, CT_mu)`
+8. Create virtualCT`predict_CT = virtualCT(pathMR, model, CT_std, CT_mu, MR_std, MR_mu)`
 
-9. A simple way to visualize the vCT, true CT and MR
-
-   `compareResult(MR, vCT, CT, savefig_dir)`
-
-10. Calculate the Mean Absolute Error for several patients of one model
-
-   ` MeanMAEforPatients = MAEforPrediction(model, lstMR, lstCT, CT_std, CT_mu)`
+  Standard deviation and mean are from training set to normalize the testing data
 
 ## model.py
 
